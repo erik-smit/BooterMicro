@@ -41,4 +41,4 @@ It works as follows:
 
 ## Thanks
 
-Thanks go to Michael Renner for coming up with this spiffy name so quickly. :)
+- @terrorobe for coming up with this spiffy name so quickly. :)
