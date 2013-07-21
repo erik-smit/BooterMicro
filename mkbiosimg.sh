@@ -18,8 +18,8 @@ mkbiosimg/sys-freedos.pl --disk="$IMGNAME"
 rm -rf tmp
 mkdir tmp
 7z x -otmp "$FDOSNAME"
-7z x -y -otmp "$ZIPNAME"
-mcopy -i"$IMGNAME" tmp/* ::
+7z x -otmp "$ZIPNAME"
+mcopy -o -i"$IMGNAME" tmp/* ::
 
 pigz "$IMGNAME"
 ls -la "$IMGNAME.gz"
