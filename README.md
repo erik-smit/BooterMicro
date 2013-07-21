@@ -39,6 +39,16 @@ It works as follows:
 - 7-zip
 - pigz
 
+## Usage
+
+```
+cd /srv/tftp
+git clone https://github.com/zylon-internet/BooterMicro.git
+echo "INCLUDE BooterMicro.cfg" >> ./pxelinux.cfg/default
+cd BooterMicro
+./fetchbios.pl
+```
+
 ## License
 
 BooterMicro is licensed under the MIT License
