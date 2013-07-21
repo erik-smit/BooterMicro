@@ -55,9 +55,9 @@ cd BooterMicro
 
 ## License
 
-BooterMicro is licensed under the MIT License
-mkbiosimg/fdboot.zip and mkbiosimg/bootsecs come from FreeDOS and are licensed under the GPL
-mkbiosimg/sys-freedos.pl is licensed under the Public Domain
+- BooterMicro is licensed under the MIT License
+- mkbiosimg/fdboot.zip and mkbiosimg/bootsecs come from FreeDOS and are licensed under the GPL
+- mkbiosimg/sys-freedos.pl is licensed under the Public Domain
  
 ## Thanks
 
