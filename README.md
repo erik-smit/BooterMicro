@@ -27,7 +27,6 @@ It works as follows:
 ![Screenshot 6](/img/bootermicro6.png)
 ![Screenshot 7](/img/bootermicro7.png)
 ![Screenshot 8](/img/bootermicro8.png)
-![Screenshot 9](/img/bootermicro9.png)
 
 ## Requirements
 
