@@ -23,6 +23,11 @@ It works as follows:
 ![Screenshot 2](/img/bootermicro2.png)
 ![Screenshot 3](/img/bootermicro3.png)
 ![Screenshot 4](/img/bootermicro4.png)
+![Screenshot 5](/img/bootermicro5.png)
+![Screenshot 6](/img/bootermicro6.png)
+![Screenshot 7](/img/bootermicro7.png)
+![Screenshot 8](/img/bootermicro8.png)
+![Screenshot 9](/img/bootermicro9.png)
 
 ## Requirements
 
