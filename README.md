@@ -39,6 +39,12 @@ It works as follows:
 - 7-zip
 - pigz
 
+## License
+
+BooterMicro is licensed under the MIT License
+mkbiosimg/fdboot.zip and mkbiosimg/bootsecs come from FreeDOS and are licensed under the GPL
+mkbiosimg/sys-freedos.pl is licensed under the Public Domain
+ 
 ## Thanks
 
 - @terrorobe for coming up with this spiffy name so quickly. :)
