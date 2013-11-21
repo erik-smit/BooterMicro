@@ -16,9 +16,9 @@ FDOSNAME=mkbiosimg/fdboot.img
 /sbin/mkfs.vfat -C "$IMGNAME" 65536 
 mkbiosimg/sys-freedos.pl --disk="$IMGNAME"
 rm -rf tmp
-mkdir tmp
+mkdir -p tmp/Update
 7z x -otmp "$FDOSNAME"
-7z x -otmp "$ZIPNAME"
+7z x -otmp/Update "$ZIPNAME"
 mcopy -o -i"$IMGNAME" tmp/* ::
 
 pigz "$IMGNAME"
