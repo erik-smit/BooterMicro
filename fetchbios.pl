@@ -79,4 +79,4 @@ foreach $ts ($te->table_states) {
 
 chdir ".."; 
 
-system("./mkpxe.cfg.sh");
+system("./mkpxecfg.sh");
