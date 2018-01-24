@@ -92,7 +92,7 @@ foreach $ts ($te->table_states) {
          system("../mkbiosimg.sh", "Firmware/$BIOSPath");
        }
      } else {
-	print "[!] DIR already exists: $BIOSPath\n";
+	print "[!] File already exists: $BIOSPath\n";
      }
    }
 }
