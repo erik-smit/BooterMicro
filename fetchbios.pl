@@ -211,7 +211,6 @@ foreach $ts ($te->tables)
 
    } # foreach: ts->row
 } # foreach: te->table
-exit;
 
 chdir ".."; 
 
