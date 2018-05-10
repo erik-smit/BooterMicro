@@ -119,17 +119,14 @@ $te->parse( $agent->content() );
 
 
 Log(DEBUG,"HTML: Table states - loop");
-#foreach $ts ($te->table_states) {
-#
 my $i = 0;
+
 foreach $ts ($te->tables)
 {
-    #use Data::Dumper;
-#	print Dumper($ts);
- #   Log(DEBUG,"LOOP: $ts");
     foreach $row ($ts->rows)
     {
 	$i++;
+
 	# PROG: Parse through items in the table
 	#       [0] Model
 	#       [1] Revision of BIOS
@@ -171,17 +168,8 @@ foreach $ts ($te->tables)
 	# PROG: If the ZipLink isn't a valid softwareItemId then skip it as well.
 	next unless ( "$ZipLink" =~ /SoftwareItemID=/ );
 
-     #if( $o_debug == 1 )
-     #{
-    #	printf " => TYPE %-10s / Model %-20s / REV %-10s\n", $Type, $Model, $Rev;
-#	printf "         ZIP-ID: %-15s / FILE %15s\n", $ZipLink, $ZipText;
-#     }
-
 	# PROG: 
-	#
-	#
 	my $BIOSPath = "$Model/$Type/$Rev/$ZipText";
-
 
 	if( ! -e $BIOSPath )
 	{
@@ -223,7 +211,8 @@ foreach $ts ($te->tables)
 
    } # foreach: ts->row
 } # foreach: te->table
+exit;
 
-#chdir ".."; 
+chdir ".."; 
 
-#system("./mkpxecfg.sh");
+system("./mkpxecfg.sh");
