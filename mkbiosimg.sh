@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# PROG: Build a bootable disk image for PXE booting
+# PROG: No longer making .img files, just unzippin!
 #
 
 set -e
@@ -13,35 +13,12 @@ if [ -z "$1" ]; then
 fi
 
 ZIPNAME="$1"
-IMGNAME="`dirname \"$ZIPNAME\"`/`basename \"$ZIPNAME\" .zip`.img"
+DIRNAME="`dirname \"$ZIPNAME\"`/`basename \"$ZIPNAME\" .zip`"
 
-FDOSNAME=mkbiosimg/fdboot.img
+# Unzip the downloaded .zip in its proper directory, nothing fancy to see here.
+unzip -jo $ZIPNAME -d$DIRNAME
 
-#echo "==> MKFS.VFAT Create blank image"
-if [ ! -x /sbin/mkfs.vfat ]; then
-  echo " [!] ERROR: Cannot execute mkfs.vfat, exiting !"
-  exit 1
-else
-  /sbin/mkfs.vfat -C "$IMGNAME" 65536 
-fi
+#replaced 7z with unzip after unpredictable behavior surrounding directories/files named identically to directories in SM releases.
+#7z x $ZIPNAME -o$DIRNAME
 
-#echo "==> SYS-FREEDOS: Copy FreeDOS boot sector info"
-mkbiosimg/sys-freedos.pl --disk="$IMGNAME"
-
-#echo "==>  7Z: Expand fdBoot images accordingly. FDOSNAME=${FDOSNAME} ZIPNAME=${ZIPNAME}"
-#echo "==> PWD: `pwd`"
-rm -rf tmp
-mkdir -p tmp/Update
-7z x -otmp "$FDOSNAME"
-7z x -otmp/Update "$ZIPNAME"
-
-#echo "==> MCOPY: Copy contents to a single directory IMGNAME ${IMGNAME} to tmp/\*"
-#echo "==>  PWD: `pwd`"
-# -v = verbose, -s = recursive, -o = overwrite, -i = image
-mcopy -s -o -i"$IMGNAME" tmp/*  ::
-
-#echo "==> PIGZ: Compress the image accordingly as a final product IMGNAME=${IMGNAME}"
-#echo "==>  PWD: `pwd`"
-pigz "$IMGNAME"
-ls -la "$IMGNAME.gz"
 

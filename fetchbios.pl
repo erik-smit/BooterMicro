@@ -1,6 +1,8 @@
 #!/usr/bin/perl -W
 #
 #
+#use strict;
+#use warnings;
 
 use HTML::TableExtract;
 use WWW::Mechanize;
@@ -13,10 +15,8 @@ my  %opt;
 getopts('df:hv',\%opt);
 
 # CONF: Options available to configure.
-#       Sometimes this URL changes as well as the table structure.
-my $url = "https://www.supermicro.com/support/resources/bios_ipmi.php?vendor=1";
 no warnings qw{qw uninitialized}; 
-my @tableheaders = qw ( Model Rev "Download Zip" "Release Notes" "Part#" Description Name);
+my @tableheaders = qw ( Model Rev "Download ZIP" "Release Notes" "Part#" Description Name);
 
 
 # ---
@@ -86,132 +86,161 @@ sub trim($)
 }
 
 # ---------------------------------------------------------------------
-
-
 chdir "Firmware" or die "Cannot chdir(\"Firmware\"): $!";
-Log(INFO,"BIOS: Looking only for items which match $o_filter") if( $o_filter );
 
-my $hs = HTML::Strip->new();
+# 1 = Intel, 2 = AMD
+my @vendors = ( 1, 2 );
 
-Log(VERBOSE,"Attemping to connect to $url");
-my $agent = WWW::Mechanize->new();
-$agent->get($url);
-
-if( $agent->status() != 200 ) # HTTP code 200, page OK
+foreach ( @vendors ) 
 {
-	Log(ERROR, "Cannot access URL $url");
-	exit(1);
-}
+	# Sometimes this URL changes as well as the table structure.
+	my $url = "https://www.supermicro.com/support/resources/bios_ipmi.php?vendor=$_";
 
+	Log(INFO,"BIOS: Looking only for items which match $o_filter") if( $o_filter );
 
-Log(DEBUG,"HTML TableExtracting on class biosipmiTable");
-Log(DEBUG,"HTML Table headers to match: " . join(',', @tableheaders));
-my $te = new HTML::TableExtract(
-	keep_headers	=> 0,
-	keep_html	=> 1,
-	attribs		=> {
-				class => 'biosipmiTable'
-			   }
-   );
+	my $hs = HTML::Strip->new();
 
-Log(DEBUG,"HTML: Parse content");
-$te->parse( $agent->content() );
+	Log(VERBOSE,"Attemping to connect to $url");
+	my $agent = WWW::Mechanize->new();
+	$agent->get($url);
 
-
-Log(DEBUG,"HTML: Table states - loop");
-my $i = 0;
-
-foreach $ts ($te->tables)
-{
-    foreach $row ($ts->rows)
-    {
-	$i++;
-
-	# PROG: Parse through items in the table
-	#       [0] Model
-	#       [1] Revision of BIOS
-	#       [2] Download ZIP file name
-	#       [3] Release Notes
-	#       [4] Part #
-	#       [5] Description of item
-	#       [6] Name of Motherboard
-	#if( $i == 5 ) { exit (); }
-
-	#Log(DEBUG, "DEBUG ROW RAW   => @{$row}");
-	my @Models	= split(/\s+/, trim($hs->parse( @$row[0]) ));
-			# i^-- split required due to non-whitespace parse from cpan module
-	my $Model	= join("_", @Models); 		# C9X299-PGF_C9X299-RPGF
-	my $Rev	= trim($hs->parse( @$row[1]) );		# R_1.2a
-   	   $Rev	=~ s/\ /_/;
-
-	my $ZipText	= trim($hs->parse( @$row[2]) );	# C7Q2708_329.zip
-	my $Type	= trim($hs->parse( @$row[5]) );	# BIOS#
-	my $BIOS	= trim($hs->parse( @$row[6]) );	# C9X299-PGF/RPGF
-	my ($ZipLink)	= @$row[2] =~ /(SoftwareItemID=\d+)\".*\"\>(.*)\<\/a\>/;
-	   $ZipLink	= 0 if( not $ZipLink );
-
-	if( $o_filter )
+	if( $agent->status() != 200 ) # HTTP code 200, page OK
 	{
-		next if( $Model !~ /$o_filter/ );
+		Log(ERROR, "Cannot access URL $url");
+		exit(1);
 	}
 
-	Log(DEBUG, "PARSE => Model  : $Model / Rev: $Rev ");
-	Log(DEBUG, "         Type   : $Type / BIOS: $BIOS");
-	Log(DEBUG, "         ZipLink: $ZipLink / ZipText: $ZipText");
-	Log(DEBUG, "--");
-	Log(DEBUG, "--");
 
-	# PROG: If the type isn't BIOS then skip the entry move to next.
-	next unless ( $Type eq "BIOS" );
-	Log(DEBUG, "DEBUG ROW PARSE => $Model / $Rev / $ZipLink / $ZipText / $Type / $BIOS");
+	Log(DEBUG,"HTML TableExtracting on class biosipmiTable");
+	Log(DEBUG,"HTML Table headers to match: " . join(',', @tableheaders));
+	my $te = new HTML::TableExtract(
+		keep_headers	=> 0,
+		keep_html	=> 1,
+		attribs		=> {
+					class => 'display'
+				}
+	);
 
-	# PROG: If the ZipLink isn't a valid softwareItemId then skip it as well.
-	next unless ( "$ZipLink" =~ /SoftwareItemID=/ );
+	Log(DEBUG,"HTML: Parse content");
+	$te->parse( $agent->content() );
 
-	# PROG: 
-	my $BIOSPath = "$Model/$Type/$Rev/$ZipText";
 
-	if( ! -e $BIOSPath )
+	Log(DEBUG,"HTML: Table states - loop");
+	#foreach $ts ($te->table_states) {
+	#
+	my $i = 0;
+	foreach $ts ($te->tables)
 	{
-		Log(INFO,"BIOS: Creating path $BIOSPath");
-		mkdir("$Model", 0755);
-		mkdir("$Model/$Type", 0755);
-		mkdir("$Model/$Type/$Rev", 0755);
-
-		open CL,  '>>', "$Model/ChangeLog";
-		open CL2, '>>', "ChangeLog";
-		$Logline = time2str("%Y-%m-%d %H:%M:%S", time) . ": $Model/$Type/$Rev/$ZipText\n";
-		print CL $Logline;
-		print CL2 $Logline;
-		# print $Logline;
-
-		$BIOSURI = "http://www.supermicro.com/support/resources/getfile.php?$ZipLink";
-
-		Log(VERBOSE, "FILE: Downloading $BIOS -> $ZipText");
-		$agent->get( $BIOSURI, ':content_file' => $BIOSPath );
-
-		if( $agent->status() != 200 )
+		#use Data::Dumper;
+	#	print Dumper($ts);
+	#   Log(DEBUG,"LOOP: $ts");
+		foreach $row ($ts->rows)
 		{
-			Log(WARN,"WARN: Can't download $ZipLink / $ZipText, HTTP error: " . $agent->status());
-			exit;
-		} else {
-			Log(INFO,"FILE: Complete, size(bytes) " . -s $BIOSPath );
-			if( -s $BIOSPath < 4194304 )
-			{
-				Log(ERROR,"FILE: Size is less than 4 MBytes");
-			}
+		$i++;
+		# PROG: Parse through items in the table
+		#       [0] Model
+		#       [1] Revision of BIOS
+		#       [2] Download ZIP file name
+		#       [3] Release Notes
+		#       [4] Part #
+		#       [5] Description of item
+		#       [6] Name of Motherboard
+		#if( $i == 5 ) { exit (); }
+
+		#Log(DEBUG, "DEBUG ROW RAW   => @{$row}");
+		my @Models	= split(/\s+/, trim($hs->parse( @$row[0]) ));
+				# i^-- split required due to non-whitespace parse from cpan module
+		my $Model	= join("_", @Models); 		# C9X299-PGF_C9X299-RPGF
+		my $Rev	= trim($hs->parse( @$row[1]) );		# R_1.2a
+		$Rev	=~ s/\ /_/;
+		if( length($Rev) < 1 )
+		{
+			$Rev = "UNKN";
 		}
 
-		# PROG: Build BIOS Image
-		Log(INFO,"BIOS: Building BIOS --> Firmware/$BIOSPath");
-		system("../mkbiosimg.sh", "Firmware/$BIOSPath");
-	} else {
-		Log(ERROR, "File already exists: $BIOSPath");
-	}
+		my $ZipText	= trim($hs->parse( @$row[2]) );	# C7Q2708_329.zip
+		my $Type	= trim($hs->parse( @$row[5]) );	# BIOS#
+		my $BIOS	= trim($hs->parse( @$row[6]) );	# C9X299-PGF/RPGF
+		my ($ZipLink)	= @$row[2] =~ /(SoftwareItemID=\d+)\".*\"\>(.*)\<\/a\>/;
+		$ZipLink	= 0 if( not $ZipLink );
+		if( $o_filter )
+		{
+			next if( $Model !~ /$o_filter/ );
+		}
 
-   } # foreach: ts->row
-} # foreach: te->table
+		Log(DEBUG, "PARSE => Model  : $Model / Rev: $Rev ");
+		Log(DEBUG, "         Type   : $Type / BIOS: $BIOS");
+		Log(DEBUG, "         ZipLink: $ZipLink / ZipText: $ZipText");
+		Log(DEBUG, "--");
+		Log(DEBUG, "--");
+
+		# PROG: If the type isn't BIOS then skip the entry move to next.
+		next unless ( $Type eq "BIOS" );
+		Log(DEBUG, "DEBUG ROW PARSE => $Model / $Rev / $ZipLink / $ZipText / $Type / $BIOS");
+
+		# PROG: If the ZipLink isn't a valid softwareItemId then skip it as well.
+		next unless ( "$ZipLink" =~ /SoftwareItemID=/ );
+
+		if( $o_debug == 1 )
+		{
+			printf " => TYPE %-10s / Model %-20s / REV %-10s\n", $Type, $Model, $Rev;
+		printf "         ZIP-ID: %-15s / FILE %15s\n", $ZipLink, $ZipText;
+		}
+
+		# remove really really really long models
+		if (length($Model) > 254) {
+			Log(WARN,"WARN: Model stripped to 254 chars");
+			$Model = substr($Model, 0, 254);
+		}
+
+		# PROG: 
+		#
+		#
+		my $BIOSPath = "$Model/$Type/$Rev/$ZipText";
+
+		if( ! -e $BIOSPath )
+		{
+			Log(INFO,"BIOS: Creating path $BIOSPath");
+			mkdir("$Model", 0755);
+			mkdir("$Model/$Type", 0755);
+			mkdir("$Model/$Type/$Rev", 0755);
+
+			open CL,  '>>', "$Model/ChangeLog";
+			open CL2, '>>', "ChangeLog";
+			$Logline = time2str("%Y-%m-%d %H:%M:%S", time) . ": $Model/$Type/$Rev/$ZipText\n";
+			print CL $Logline;
+			print CL2 $Logline;
+			# print $Logline;
+
+			$BIOSURI = "http://www.supermicro.com/support/resources/getfile.php?$ZipLink";
+
+			Log(VERBOSE, "FILE: Downloading $BIOS -> $ZipText");
+			$agent->get( $BIOSURI, ':content_file' => $BIOSPath );
+
+			if( $agent->status() != 200 )
+			{
+				Log(WARN,"WARN: Can't download $ZipLink / $ZipText, HTTP error: " . $agent->status());
+				exit;
+			} else {
+				Log(INFO,"FILE: Complete, size(bytes) " . -s $BIOSPath );
+				if( -s $BIOSPath < 4194304 )
+				{
+					Log(ERROR,"FILE: Size is less than 4 MBytes");
+				}
+			}
+
+			# PROG: Build BIOS Image
+			Log(INFO,"BIOS: Building BIOS --> Firmware/$BIOSPath");
+			system("../mkbiosimg.sh", "Firmware/$BIOSPath");
+			system("../mkbiosimg-legacy.sh", "Firmware/$BIOSPath");
+		} else {
+			Log(ERROR, "File already exists: $BIOSPath");
+		}
+
+		} # foreach: ts->row
+	} # foreach: te->table
+} # foreach: @vendors
 
 chdir ".."; 
-
 system("./mkpxecfg.sh");
+system("./mkpxecfg-legacy.sh");
