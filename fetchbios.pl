@@ -241,6 +241,6 @@ foreach ( @vendors )
 	} # foreach: te->table
 } # foreach: @vendors
 
-chdir ".."; 
+chdir "..";
 system("./mkpxecfg.sh");
 system("./mkpxecfg-legacy.sh");

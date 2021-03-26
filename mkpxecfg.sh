@@ -12,9 +12,13 @@ echo 'menu Bootermicro Firmware Updater/Installer - **UEFI Mode**' >> tmp/Booter
 
 # Dig through the ./Firmware directory to figure out what Boards/Revisions/BIOS/etc. exist and add entries for 'em
 find ./Firmware -type f -name *.zip | sort | while IFS=/ read FOO Firmware BOARD BIOS VER FILE; do 
-  if echo $BOARD | grep -q ^X10; then
+  if echo $BOARD | grep -q ^X1; then
+    GROUPLENGTH=4
+  elif echo $BOARD | grep -q ^H1; then
     GROUPLENGTH=4
   elif echo $BOARD | grep -q ^X; then
+    GROUPLENGTH=3
+  elif echo $BOARD | grep -q ^H; then
     GROUPLENGTH=3
   else
     GROUPLENGTH=2
