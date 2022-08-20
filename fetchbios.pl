@@ -1,5 +1,7 @@
 #!/usr/bin/perl -W
 #
+# Rev:
+#  2022.08.19 - Changed Table header positions, supermicro updated their website.
 #
 #use strict;
 #use warnings;
