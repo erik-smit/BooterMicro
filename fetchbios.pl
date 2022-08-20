@@ -1,7 +1,5 @@
 #!/usr/bin/perl -W
 #
-# Rev:
-#  2022.08.19 - Changed Table header positions, supermicro updated their website.
 #
 #use strict;
 #use warnings;
@@ -18,9 +16,7 @@ getopts('df:hv',\%opt);
 
 # CONF: Options available to configure.
 no warnings qw{qw uninitialized}; 
-#my @tableheaders = qw ( Model Rev "Download ZIP" "Release Notes" "Part#" Description Name);
-# 2022.08.19 - Less entries
-my @tableheaders = qw ( Model Rev "Download ZIP 1" "Release Notes" Description);
+my @tableheaders = qw ( Model Rev "Download ZIP" "Release Notes" "Part#" Description Name);
 
 
 # ---
@@ -128,6 +124,7 @@ foreach ( @vendors )
 	Log(DEBUG,"HTML: Parse content");
 	$te->parse( $agent->content() );
 
+
 	Log(DEBUG,"HTML: Table states - loop");
 	#foreach $ts ($te->table_states) {
 	#
@@ -136,12 +133,10 @@ foreach ( @vendors )
 	{
 		#use Data::Dumper;
 	#	print Dumper($ts);
-	   #Log(DEBUG,"LOOP: $ts");
+	#   Log(DEBUG,"LOOP: $ts");
 		foreach $row ($ts->rows)
 		{
 		$i++;
-		#Log(DEBUG,"FOREACH ts: $row");
-		#Log(DEBUG,"       -->: " . @$row[0] );
 		# PROG: Parse through items in the table
 		#       [0] Model
 		#       [1] Revision of BIOS
@@ -150,15 +145,9 @@ foreach ( @vendors )
 		#       [4] Part #
 		#       [5] Description of item
 		#       [6] Name of Motherboard
-		# 2022.08.19 changes
-		#       [0] Model
-		#       [1] Revision of BIOS
-		#       [2] Download ZIP file name
-		#       [3] Release Notes
-		#       [4] Description of item
 		#if( $i == 5 ) { exit (); }
 
-		Log(DEBUG, "FOREACH ROW: RAW   => @{$row}");
+		#Log(DEBUG, "DEBUG ROW RAW   => @{$row}");
 		my @Models	= split(/\s+/, trim($hs->parse( @$row[0]) ));
 				# i^-- split required due to non-whitespace parse from cpan module
 		my $Model	= join("_", @Models); 		# C9X299-PGF_C9X299-RPGF
@@ -170,8 +159,8 @@ foreach ( @vendors )
 		}
 
 		my $ZipText	= trim($hs->parse( @$row[2]) );	# C7Q2708_329.zip
-		my $Type	= trim($hs->parse( @$row[4]) );	# BIOS/BMC ?
-		my $BIOS	= trim($hs->parse( @$row[0]) );	# C9X299-PGF/RPGF
+		my $Type	= trim($hs->parse( @$row[5]) );	# BIOS#
+		my $BIOS	= trim($hs->parse( @$row[6]) );	# C9X299-PGF/RPGF
 		my ($ZipLink)	= @$row[2] =~ /(SoftwareItemID=\d+)\".*\"\>(.*)\<\/a\>/;
 		$ZipLink	= 0 if( not $ZipLink );
 		if( $o_filter )
@@ -185,12 +174,9 @@ foreach ( @vendors )
 		Log(DEBUG, "--");
 		Log(DEBUG, "--");
 
-		# exit if( $i == 8); # for debug, break out after [x] entries
-
 		# PROG: If the type isn't BIOS then skip the entry move to next.
 		next unless ( $Type eq "BIOS" );
 		Log(DEBUG, "DEBUG ROW PARSE => $Model / $Rev / $ZipLink / $ZipText / $Type / $BIOS");
-
 
 		# PROG: If the ZipLink isn't a valid softwareItemId then skip it as well.
 		next unless ( "$ZipLink" =~ /SoftwareItemID=/ );
