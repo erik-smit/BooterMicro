@@ -1,4 +1,8 @@
 #!/bin/bash
+#
+# PROG: No longer making .img files, just unzippin!
+#
+
 set -e
 
 cd "$( dirname "${BASH_SOURCE[0]}" )" 
@@ -9,18 +13,12 @@ if [ -z "$1" ]; then
 fi
 
 ZIPNAME="$1"
-IMGNAME="`dirname \"$ZIPNAME\"`/`basename \"$ZIPNAME\" .zip`.img"
+DIRNAME="`dirname \"$ZIPNAME\"`/`basename \"$ZIPNAME\" .zip`"
 
-FDOSNAME=mkbiosimg/fdboot.img
+# Unzip the downloaded .zip in its proper directory, nothing fancy to see here.
+unzip -jo $ZIPNAME -d$DIRNAME
 
-/sbin/mkfs.vfat -C "$IMGNAME" 65536 
-mkbiosimg/sys-freedos.pl --disk="$IMGNAME"
-rm -rf tmp
-mkdir -p tmp/Update
-7z x -otmp "$FDOSNAME"
-7z x -otmp/Update "$ZIPNAME"
-mcopy -o -i"$IMGNAME" tmp/* ::
+#replaced 7z with unzip after unpredictable behavior surrounding directories/files named identically to directories in SM releases.
+#7z x $ZIPNAME -o$DIRNAME
 
-pigz "$IMGNAME"
-ls -la "$IMGNAME.gz"
 

@@ -1,1 +1,5 @@
-Firmware
+Firmware/*
+ipxe/*
+!.gitkeep
+tmp
+.DS_Store
